@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Your Blog{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<style>
+    .blog-creator {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: linear-gradient(145deg, #f6f9fc, #ffffff);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .form-section {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease;
+    }
+
+    .form-section:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-section h2 {
+        color: #2d3748;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .form-section h2:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, #4299e1, #667eea);
+        border-radius: 2px;
+    }
+
+    .editor-section {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .tools-area {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+        order: 1;
+    }
+
+    .tools-area h3 {
+        color: #4a5568;
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .tool {
+        background: white;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        cursor: move;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .tool:hover {
+        background: #edf2f7;
+        border-color: #4299e1;
+        transform: scale(1.02);
+    }
+
+    .tool i {
+        font-size: 1.2rem;
+        color: #4299e1;
+    }
+
+    .canvas-area {
+        min-height: 700px;
+        border: 2px dashed #cbd5e0;
+        border-radius: 16px;
+        padding: 2rem;
+        background: white;
+        transition: all 0.3s ease;
+        order: 2;
+        width: 100%;
+    }
+
+    .canvas-area:hover {
+        border-color: #4299e1;
+    }
+
+    .canvas-placeholder {
+        color: #a0aec0;
+        text-align: center;
+        padding: 4rem 2rem;
+        font-size: 1.1rem;
+        background: #f7fafc;
+        border-radius: 12px;
+        border: 2px dashed #e2e8f0;
+        margin: 2rem;
+    }
+
+    .content-element {
+        margin: 1rem 0;
+        padding: 1.5rem;
+        background: #f7fafc;
+        border-radius: 12px;
+        position: relative;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .content-element:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .subheading-input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        font-size: 1.25rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .paragraph-input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        min-height: 120px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        resize: vertical;
+    }
+
+    .subheading-input:focus,
+    .paragraph-input:focus {
+        border-color: #4299e1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: #fc8181;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .delete-btn:hover {
+        background: #f56565;
+        transform: scale(1.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        border-color: #4299e1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+
+    .submit-button {
+        background: linear-gradient(45deg, #4299e1, #667eea);
+        color: white;
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 2rem auto;
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+    }
+
+    .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(66, 153, 225, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-creator">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h2>About You</h2>
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="course" placeholder="Your Course" required>
+            </div>
+            <div class="form-group">
+                <input type="number" name="year" placeholder="Year" min="1" max="4" required>
+            </div>
+            <div class="form-group">
+                <input type="file" name="profile_picture" accept="image/*">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Your Blog Post</h2>
+            <div class="form-group">
+                <input type="text" name="title" placeholder="Blog Title" required>
+            </div>
+        </div>
+
+        <div class="editor-section">
+            <div class="tools-area">
+                <h3>Content Tools</h3>
+                <div class="tool" draggable="true" data-type="subheading">
+                    <i class="fas fa-heading"></i>
+                    <span>Subheading</span>
+                </div>
+                <div class="tool" draggable="true" data-type="paragraph">
+                    <i class="fas fa-paragraph"></i>
+                    <span>Paragraph</span>
+                </div>
+            </div>
+            <div class="canvas-area" id="contentCanvas">
+                <div class="canvas-placeholder">Drag elements here to build your blog</div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-button">Publish Blog</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tools = document.querySelectorAll('.tool');
+    const canvas = document.getElementById('contentCanvas');
+    let draggedTool = null;
+
+    tools.forEach(tool => {
+        tool.addEventListener('dragstart', (e) => {
+            draggedTool = tool;
+            e.dataTransfer.setData('text/plain', tool.dataset.type);
+            tool.classList.add('dragging');
+        });
+
+        tool.addEventListener('dragend', (e) => {
+            tool.classList.remove('dragging');
+        });
+    });
+
+    canvas.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        canvas.style.borderColor = '#4299e1';
+        canvas.style.backgroundColor = '#f7fafc';
+    });
+
+    canvas.addEventListener('dragleave', (e) => {
+        canvas.style.borderColor = '#cbd5e0';
+        canvas.style.backgroundColor = 'white';
+    });
+
+    canvas.addEventListener('drop', (e) => {
+        e.preventDefault();
+        canvas.style.borderColor = '#cbd5e0';
+        canvas.style.backgroundColor = 'white';
+        
+        const type = e.dataTransfer.getData('text/plain');
+        const element = createContentElement(type);
+        
+        if (element) {
+            const placeholder = canvas.querySelector('.canvas-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            canvas.appendChild(element);
+        }
+    });
+});
+
+function createContentElement(type) {
+    const div = document.createElement('div');
+    div.className = `content-element ${type}`;
+    
+    if (type === 'subheading') {
+        div.innerHTML = `
+            <input type="text" name="content_subheading[]" 
+                   placeholder="Enter subheading" class="subheading-input">
+            <button type="button" onclick="this.parentElement.remove()" class="delete-btn">×</button>
+        `;
+    } else if (type === 'paragraph') {
+        div.innerHTML = `
+            <textarea name="content_paragraph[]" 
+                      placeholder="Enter paragraph text" class="paragraph-input"></textarea>
+            <button type="button" onclick="this.parentElement.remove()" class="delete-btn">×</button>
+        `;
+    }
+
+    return div;
+}
+
+// Add form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const blocks = Array.from(canvas.children);
+    
+    // Check if last element is a subheading
+    if (blocks.length > 0 && blocks[blocks.length - 1].classList.contains('subheading')) {
+        e.preventDefault();
+        alert('Please add a paragraph for the last heading!');
+        return;
+    }
+
+    // Check if all subheadings have paragraphs
+    for (let i = 0; i < blocks.length; i++) {
+        if (blocks[i].classList.contains('subheading')) {
+            if (i === blocks.length - 1 || blocks[i + 1].classList.contains('subheading')) {
+                e.preventDefault();
+                alert('Each heading must be followed by a paragraph!');
+                return;
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

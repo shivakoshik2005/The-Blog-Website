@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<script src="{% static 'blog/js/rating.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="blog-detail">
+    <h1 class="blog-title">{{ blog.title }}</h1>
+    <div class="author-info">
+        {% if blog.author.profile_picture %}
+            <img src="{{ blog.author.profile_picture.url }}" alt="{{ blog.author.name }}" class="blog-image">
+        {% endif %}
+        <div class="author-details">
+            <strong>{{ blog.author.name }}</strong>
+            <span>{{ blog.author.course }} - {{ blog.author.year }} Year</span>
+        </div>
+    </div>
+    <hr>    <div class="blog-content">
+        {% for item in blog.content %}
+            {% if item.type == 'subheading' %}
+                <h2>{{ item.value }}</h2>
+            {% elif item.type == 'paragraph' %}
+                <p>{{ item.value }}</p>
+            {% endif %}
+        {% endfor %}
+    </div>
+      <div class="rating-section">
+        <h3>Rate this blog</h3>
+        <div class="rating-display current-rating">
+            <div class="stars">
+                {% with ''|ljust:blog.average_rating|default:""|ljust:5 as stars %}
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= blog.average_rating|default:0 %}
+                            <span class="star filled">★</span>
+                        {% else %}
+                            <span class="star">★</span>
+                        {% endif %}
+                    {% endfor %}
+                {% endwith %}
+            </div>
+            <span class="rating-value">{{ blog.average_rating|floatformat:1 }}/5</span>
+            <span class="rating-count">({{ blog.rating_count }} rating{{ blog.rating_count|pluralize }})</span>
+        </div>
+        
+        <form class="rating" data-blog-id="{{ blog.pk }}">
+            {% csrf_token %}
+            <div class="stars-input">
+                {% for i in "54321"|make_list %}
+                    <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
+                    <label for="star{{ i }}">★</label>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingForm = document.querySelector('.rating');
+    const averageRatingSpan = document.querySelector('.average-rating');
+    
+    ratingForm.addEventListener('change', function(e) {
+        if (e.target.name === 'rating') {
+            const blogId = this.dataset.blogId;
+            const rating = e.target.value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch(`/blog/${blogId}/rate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: `rating=${rating}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    averageRatingSpan.textContent = data.average;
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

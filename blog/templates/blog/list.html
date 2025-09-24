@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Blog List{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Blog Posts</h1>
+<div class="blog-grid">
+    {% if blogs %}
+        {% for blog in blogs %}
+            <a href="{% url 'blog:blog_detail' blog.pk %}" class="blog-card">
+                <div class="blog-content">
+                    <h2 class="blog-title">{{ blog.title }}</h2>
+                    {% if blog.content %}
+                        {% for block in blog.content %}
+                            {% if block.type == 'paragraph' %}
+                                <p>{{ block.value|truncatewords:30 }}</p>
+                                {% break %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="right-content">
+                    {% if blog.author.profile_picture %}
+                        <img src="{{ blog.author.profile_picture.url }}" alt="" class="blog-image">
+                    {% endif %}
+                    <div class="author-details">
+                        <strong>{{ blog.author.name }}</strong>
+                        <span>{{ blog.author.course }}</span>
+                        <span>{{ blog.author.year }} Year</span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <p>No blogs found.</p>
+    {% endif %}
+</div>
+{% endblock %}

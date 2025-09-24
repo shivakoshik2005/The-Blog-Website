@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<article class="blog-detail">
+    <header class="blog-header">
+        <div class="header-content">
+            <h1 class="blog-title">{{ blog.title }}</h1>
+            <div class="header-right">
+                {% if blog.author.profile_picture %}
+                    <img src="{{ blog.author.profile_picture.url }}" alt="" class="profile-image">
+                {% endif %}
+                <div class="author-details">
+                    <span class="author-name">{{ blog.author.name }}</span>
+                    <span class="author-meta">{{ blog.author.course }}</span>
+                    <span class="author-meta">{{ blog.author.year }} Year</span>
+                    <span class="author-meta">Posted on {{ blog.created_at|date:"F j, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="blog-content">
+        {% if blog.content %}
+            {% with current_heading=None %}
+                {% for block in blog.content %}
+                    {% if block.type == 'subheading' %}
+                        {% if not forloop.last %}
+                            {% with next_block=blog.content|slice:forloop.counter0|first %}
+                                {% if next_block.type == 'subheading' %}
+                                    <div class="content-block error-block">
+                                        <p class="error-message">Missing paragraph for heading: "{{ block.value }}"</p>
+                                    </div>
+                                {% else %}
+                                    <div class="content-block heading">
+                                        <h2>{{ block.value }}</h2>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                        {% with current_heading=block.value %}
+                        {% endwith %}
+                    {% elif block.type == 'paragraph' %}
+                        <div class="content-block paragraph">
+                            <div class="paragraph-header">
+                                <span class="paragraph-title">Related to: {{ current_heading }}</span>
+                            </div>
+                            <p>{{ block.value }}</p>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+        {% else %}
+            <p>No content available.</p>
+        {% endif %}
+    </div>
+</article>
+
+<style>
+    .blog-detail {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .blog-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .blog-title {
+        font-size: 2.5rem;
+        color: #1a202c;
+        margin: 0;
+        flex: 1;
+    }
+
+    .header-right {
+        text-align: right;
+        min-width: 200px;
+    }
+
+    .profile-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4299e1;
+        margin-bottom: 1rem;
+    }
+
+    .author-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .author-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .author-meta {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+
+    .content-block {
+        margin-bottom: 2rem;
+    }
+
+    .paragraph-header {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .paragraph-title {
+        color: #718096;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    .content-block.paragraph {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-top: 3px solid #4299e1;
+    }
+
+    .content-block.heading {
+        margin-top: 2rem;
+        border-left: 4px solid #4299e1;
+        padding-left: 1rem;
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .content-block p {
+        color: #4a5568;
+        line-height: 1.8;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .content-block h2 {
+        color: #2d3748;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .error-block {
+        background: #fff5f5;
+        border-left: 4px solid #f56565;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+    }
+
+    .error-message {
+        color: #c53030;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}

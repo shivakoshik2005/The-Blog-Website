@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    {% block extra_head %}{% endblock %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Blog Page{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'blog/css/style.css' %}">
+</head>
+<body>
+    <header>
+        <a href="{% url 'blog:blog_list' %}" class="logo">The Blog Page</a>
+        <nav>
+            <a href="{% url 'blog:blog_list' %}" class="nav-link">Home</a>
+            <a href="{% url 'blog:add_blog' %}" class="nav-button">Create Blog</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+        {% block extra_scripts %}{% endblock %}
+    </main>
+</body>
+</html>
