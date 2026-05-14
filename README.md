@@ -1,117 +1,435 @@
+# The Blog Website (Django)
 
-Blog Website 📝
+A structured, feature-based blog project built with **Django**. It includes:
+- A **Blog list** page
+- A **Blog detail** page
+- A **Blog creation editor** using **drag & drop content blocks**
+- **Author profile picture upload**
 
-A feature-rich and modern blog platform built with Django. This project provides a complete solution for creating, managing, and sharing articles with a clean user interface and a powerful admin panel.
+Storage is handled by **SQLite** (`db.sqlite3`) using Django’s ORM and migrations.
 
-✨ Features
+---
 
-  * *Create, Read, Update, Delete (CRUD)* functionality for blog posts.
-  * *Rich Text Editor:* A user-friendly editor for writing and formatting posts.
-  * *Responsive Design:* Looks great on desktops, tablets, and mobile devices.
+## 1) Entire project structure (full repository layout)
 
------
+```text
+.
+├── db.sqlite3
+├── manage.py
+├── README.md
+│
+├── artistic_blog/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+└── blog/
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    ├── tests.py
+    ├── urls.py
+    ├── views.py
+    ├── migrations/
+    │   ├── __init__.py
+    │   └── 0001_initial.py
+    ├── static/
+    │   ├── css/
+    │   │   ├── create.css
+    │   │   └── style.css
+    │   └── js/
+    │       ├── create.js
+    │       ├── main.js
+    │       └── rating.js
+    └── templates/
+        ├── base_template.html
+        ├── base.html
+        ├── blog_detail.html
+        ├── blog_list.html
+        ├── list.html
+        └── blog/
+            ├── add_blog.html
+            ├── blog_detail.html
+            └── blog_list.html
 
-🛠 Technologies Used
+├── templates/
+│   └── base.html
+│
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── blog/
+│   │   ├── css/
+│   │   │   └── style.css
+│   │   └── js/
+│   │       ├── main.js
+│   │       └── rating.js
+│   └── js/
+│       ├── main.js
+│       └── rating.js
+│
+├── staticfiles/              # generated after `python manage.py collectstatic`
+│   └── admin/...
+│
+└── media/
+    └── profile_pics/
+        ├── image-removebg-preview_-_2025-06-23T212039.049.png
+        ├── test.jpg
+        ├── test-removebg-preview.png
+        └── test_pqy9JcT.jpg
+```
 
-  * *Backend:* Python, Django
-  * *Database:* SQLite3 (default).
-  * *Frontend:* HTML, CSS, JavaScript
+### What these folders are used for
+- **`artistic_blog/`**: Django *project* (settings, root URL routing, WSGI/ASGI)
+- **`blog/`**: Django *app* (models, views, URLs, templates, static)
+- **`templates/`**: project-level templates (used by Django template loader)
+- **`static/`** and **`blog/static/`**: CSS/JS assets
+- **`staticfiles/`**: output directory created by `collectstatic`
+- **`media/`**: user-uploaded files (profile pictures)
 
-------
+---
 
-🚀 Getting Started
+## 2) Tech stack (detailed explanation)
 
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+### Backend
+- **Python**: core runtime language.
+- **Django**: full-stack web framework providing:
+  - URL routing (`urls.py`)
+  - Request handlers/views (`views.py`)
+  - ORM (`models.py`) + migrations
+  - Templates (HTML rendering)
+  - Admin site
+  - Static/media configuration
 
-Prerequisites
+### Frontend
+- **HTML + CSS**: page structure and styling.
+- **JavaScript**:
+  - Implements the **drag & drop editor** on the blog creation page.
+  - Generates the hidden/visible form inputs so the server receives block data.
+  - Performs simple client-side validation (e.g., a subheading must be followed by a paragraph).
 
-Make sure you have the following installed on your system:
+### Database
+- **SQLite 3**:
+  - Stored in **one file**: `db.sqlite3`.
+  - Used by Django backend: `django.db.backends.sqlite3`.
 
-  * *Python* (version 3.8 or higher)
-  * *Git*
+---
 
-Setup and Installation
+## 3) How the code flows end-to-end (request → routing → views → ORM/DB → templates)
 
-Follow these steps to set up the project locally.
+### 3.1 URL routing at the project level
+**File:** `artistic_blog/urls.py`
 
-1.  *Clone the Repository*
-    Open your terminal and clone the project repository using Git.
+Key routing:
+- `path('admin/', admin.site.urls)`
+- `path('', include('blog.urls'))`
 
-    sh
-    git clone <your-repository-url.git>
-    cd blog-website
-    
+So:
+- `/admin/` is handled by Django’s admin.
+- `/` and everything under it (except `/admin/`) is handled by the `blog` app.
 
-2.  *Create and Activate a Virtual Environment*
-    It's highly recommended to use a virtual environment to manage project dependencies.
+In `DEBUG=True`, Django also serves:
+- `/media/` from `MEDIA_ROOT`
+- `/static/` from `STATIC_ROOT`
 
-      * *On macOS/Linux:*
-        sh
-        python3 -m venv venv
-        source venv/bin/activate
-        
-      * *On Windows:*
-        sh
-        python -m venv venv
-        .\venv\Scripts\activate
-        
+---
 
-    Your terminal prompt should now be prefixed with (venv), indicating the virtual environment is active.
+### 3.2 URL routing at the app level
+**File:** `blog/urls.py`
 
-3.  *Install Dependencies*
-    Install all the required Python packages listed in the requirements.txt file.
+```python
+app_name = 'blog'
 
-    sh
-    pip install -r requirements.txt
-    
+urlpatterns = [
+    path('', views.blog_list, name='blog_list'),
+    path('add/', views.add_blog, name='add_blog'),
+    path('blog/<int:pk>/', views.blog_detail, name='blog_detail'),
+]
+```
 
-4.  *Apply Database Migrations*
-    This command sets up your database schema based on the project's models.
+Routes:
+1. **`GET /`** → `blog_list`
+2. **`GET /add/`** → `add_blog` (render editor)
+3. **`POST /add/`** → `add_blog` (create Author + Blog + JSON content)
+4. **`GET /blog/<pk>/`** → `blog_detail`
 
-    sh
-    python manage.py migrate
-    
+---
 
-5.  *Create a Superuser*
-    You'll need a superuser account to access the Django admin panel. Follow the prompts to create one.
+### 3.3 Views (what they do)
 
-    sh
-    python manage.py createsuperuser
-    
+#### A) `blog_list(request)`
+**File:** `blog/views.py`
 
-6.  *Run the Development Server*
-    You're all set\! Start the Django development server.
+- Reads all blog posts:
+  - `blogs = Blog.objects.all()`
+- Renders:
+  - `blog/blog_list.html`
+- Passes:
+  - `{'blogs': blogs}`
 
-    sh
-    python manage.py runserver
-    
+**How templates use it:**
+- For each `blog`, the template displays:
+  - `blog.title`
+  - a snippet of content (template iterates JSON blocks and prints the first paragraph it finds)
+  - the related `blog.author` fields (and profile image if present)
 
-    The application will be available at **[http://127.0.0.1:8000/](https://www.google.com/url?sa=E&source=gmail&q=http://127.0.0.1:8000/)**.
+---
 
------
+#### B) `blog_detail(request, pk)`
+- Fetches one blog:
+  - `blog = get_object_or_404(Blog, pk=pk)`
+- Renders:
+  - `blog/blog_detail.html`
+- Template logic:
+  - Iterates `blog.content` (JSON array)
+  - When block is `{type: 'subheading'}` → render `<h2>`
+  - When block is `{type: 'paragraph'}` → render `<p>` under the related subheading
 
-## 🖥 Usage
+Because content is stored as JSON blocks, the template “reconstructs” the document structure during rendering.
 
-  * Visit http://127.0.0.1:8000/ to view the blog.
-  * Access the admin panel by navigating to http://127.0.0.1:8000/admin/ and logging in with the superuser credentials you created. From here, you can manage all aspects of the blog.
+---
 
------
+#### C) `add_blog(request)` (GET + POST)
 
-## 🤝 Contributing
+**GET**
+- Renders editor page:
+  - `blog/add_blog.html`
 
-Contributions, issues, and feature requests are welcome\! Feel free to check the issues page.
+**POST** (core server-side flow)
+1. **Create an Author**
+   - Uses form fields:
+     - `name`, `course`, `year`
+     - optional `profile_picture`
+   - Creates the row via:
+     - `Author.objects.create(...)`
 
-1.  Fork the Project
-2.  Create your Feature Branch (git checkout -b feature/AmazingFeature)
-3.  Commit your Changes (git commit -m 'Add some AmazingFeature')
-4.  Push to the Branch (git push origin feature/AmazingFeature)
-5.  Open a Pull Request
+2. **Build JSON content blocks**
+   - The editor (JavaScript) creates repeated inputs named:
+     - `content_subheading[]`
+     - `content_paragraph[]`
+   - Server reads them as lists:
+     - `subheadings = request.POST.getlist('content_subheading[]')`
+     - `paragraphs = request.POST.getlist('content_paragraph[]')`
 
------
+3. **Combine subheading + paragraph by index**
+   - Loop: `for i in range(max(len(subheadings), len(paragraphs))):`
+   - For each index:
+     - if a subheading exists → append `{type:'subheading', value: ...}`
+     - if a paragraph exists → append `{type:'paragraph', value: ...}`
 
+4. **Create the Blog post**
+   - Creates via:
+     - `Blog.objects.create(author=author, title=..., content=content)`
 
-## 📧 Contact
+5. **Redirect**
+   - `return redirect('blog:blog_list')`
 
-Your Name - K Shiva Koushik
-shivakoushik2005@gmail.com
-Get to know me : shivakoshik2005.github.io/portfolio
+---
+
+### 3.4 How the JavaScript editor changes form data
+**File:** `blog/templates/blog/add_blog.html`
+
+- The page shows draggable “tools”:
+  - Subheading tool
+  - Paragraph tool
+- When dropped on the canvas, JS creates DOM elements with inputs:
+  - `<input name="content_subheading[]" ...>`
+  - `<textarea name="content_paragraph[]" ...>`
+- On submit, JS validates block ordering:
+  - last element must not be a subheading
+  - each subheading must be followed by a paragraph
+
+So the server always receives structured input arrays that the Python view can convert into JSON blocks.
+
+---
+
+## 4) Database explanation (models + why SQLite)
+
+### 4.1 Models
+**File:** `blog/models.py`
+
+#### `Author`
+- `name: CharField(100)`
+- `course: CharField(100)`
+- `year: IntegerField()`
+- `profile_picture: ImageField(upload_to='profile_pics/', null=True, blank=True)`
+
+#### `Blog`
+- `title: CharField(200)`
+- `content: JSONField()`
+- `author: ForeignKey(Author, on_delete=CASCADE, related_name='blogs')`
+- `created_at: DateTimeField(auto_now_add=True)`
+
+---
+
+### 4.2 How JSONField works here
+`Blog.content` is a JSON array of blocks.
+
+The application assumes a block ordering pattern:
+- subheading comes before its paragraph
+
+The template uses each block’s `type` to decide rendering.
+
+---
+
+### 4.3 Why SQLite 3 and not another DB?
+This project explicitly sets:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+Reasons (practical):
+- SQLite requires **no server installation**.
+- It’s ideal for:
+  - learning
+  - demos
+  - small projects
+- The DB is a single file (`db.sqlite3`), so it’s easy to move and run.
+
+**Trade-off:** it’s not as scalable or feature-rich as PostgreSQL for heavy production workloads.
+
+---
+
+## 5) Django commands used in this project (syntax + meaning + purpose)
+
+Commands are executed from the repo root where `manage.py` exists:
+
+```bash
+python manage.py <command>
+```
+
+### 5.1 `runserver`
+```bash
+python manage.py runserver
+```
+**Purpose:** start the local Django development server.
+
+### 5.2 `migrate`
+```bash
+python manage.py migrate
+```
+**Purpose:** apply migration files to the database.
+- Creates tables in SQLite.
+- Updates schema to match `models.py`.
+
+### 5.3 `makemigrations`
+```bash
+python manage.py makemigrations
+```
+**Purpose:** detect model changes and generate migration files.
+- Generates files under `blog/migrations/`.
+
+### 5.4 `createsuperuser`
+```bash
+python manage.py createsuperuser
+```
+**Purpose:** create a Django admin account.
+- Then you can log into `/admin/`.
+
+### 5.5 `shell`
+```bash
+python manage.py shell
+```
+**Purpose:** open a Django-aware Python shell.
+- Great for testing ORM queries.
+
+### 5.6 `check`
+```bash
+python manage.py check
+```
+**Purpose:** run Django’s system checks (settings, URL config, etc.).
+
+### 5.7 `showmigrations`
+```bash
+python manage.py showmigrations
+```
+**Purpose:** list migrations and which ones are applied.
+
+### 5.8 `sqlmigrate`
+```bash
+python manage.py sqlmigrate <app_label> <migration_name>
+```
+Example:
+```bash
+python manage.py sqlmigrate blog 0001
+```
+**Purpose:** show the SQL a migration would run (useful to understand DB changes).
+
+### 5.9 `collectstatic`
+```bash
+python manage.py collectstatic
+```
+**Purpose:** copy static files from `static/` and `app/static/` into `STATIC_ROOT` (`staticfiles/`).
+
+---
+
+## 6) How to run the project (complete flow)
+
+### 6.1 Create virtual environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 6.2 Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 6.3 Apply migrations (SQLite DB)
+```bash
+python manage.py migrate
+```
+
+### 6.4 (Optional) create admin user
+```bash
+python manage.py createsuperuser
+```
+
+### 6.5 Start server
+```bash
+python manage.py runserver
+```
+
+### 6.6 URLs
+- Blog list: `http://127.0.0.1:8000/`
+- Create blog: `http://127.0.0.1:8000/add/`
+- Blog detail: `http://127.0.0.1:8000/blog/<pk>/`
+- Admin: `http://127.0.0.1:8000/admin/`
+
+---
+
+## 7) POST /add/ step-by-step (what exactly changes)
+
+1. Browser submits the form.
+2. `add_blog` receives:
+   - author fields (name/course/year)
+   - `profile_picture` file
+   - arrays of content:
+     - `content_subheading[]` (repeated)
+     - `content_paragraph[]` (repeated)
+3. Django:
+   - saves uploaded image into `media/profile_pics/`
+   - creates an `Author` row
+   - converts posted arrays into the JSON structure
+   - creates a `Blog` row referencing that author
+4. Browser is redirected back to `/` and the new post appears.
+
+---
+
+## 8) Notes about “why it is the way it is” (important design choices)
+
+- **Structured blog content is stored in JSON** (`Blog.content`) because the editor allows variable-length blocks.
+- **Templates render JSON blocks dynamically** by checking each block’s `type`.
+- **JS ensures correct ordering** (heading before paragraph) so the server can build consistent JSON.
+- **SQLite** is used for simplicity: minimal setup, single-file DB, easy migrations.
+
